@@ -12,8 +12,14 @@
     <div class="jumbotron mt-3">
       <h1>Current Time</h1>
       <p class="lead">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Praesentium harum saepe nihil repellendus, excepturi natus voluptate accusantium assumenda a similique illum eveniet dolore voluptatem perferendis labore voluptatibus libero vitae veniam!</p>
-      <a class="btn btn-lg btn-primary" href="" role="button">Show Time</a>
-      <div id="time"></div>
+      <div class="row">
+        <div class="col">
+          <a class="btn btn-lg btn-primary" href="#" role="button" onclick="getCurrentTime()">Show Time</a>
+        </div>
+        <div class="col">
+          <div id="time">Placeholder</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -22,6 +28,7 @@
   <script src="https://unpkg.com/@popperjs/core@2"></script>
   <script src="./js/bootstrap.min.js"></script>
 
+  <script src="./js/moment.js"></script>
   <script src="./js/index.js"></script>
 </body>
 </html>
