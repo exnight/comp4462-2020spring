@@ -1,0 +1,23 @@
+{
+  "name": "comp4462-2020spring",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exnight/comp4462-2020spring.git"
+  },
+  "author": "exnight",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/exnight/comp4462-2020spring/issues"
+  },
+  "homepage": "https://github.com/exnight/comp4462-2020spring#readme",
+  "dependencies": {
+    "lodash": "^4.17.15",
+    "moment": "^2.24.0"
+  }
+}
