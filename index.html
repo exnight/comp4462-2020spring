@@ -5,28 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>COMP4462 Project 2020 Spring</title>
   <link rel="stylesheet" href="./css/bootstrap.min.css">
+  <link rel="stylesheet" href="./css/bootstrap-datepicker-1.9.0.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css">
 </head>
 
 <body>
-  <div class="container">
-    <div class="jumbotron mt-3">
-      <h1>Current Time</h1>
-      <p class="lead">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Praesentium harum saepe nihil repellendus, excepturi natus voluptate accusantium assumenda a similique illum eveniet dolore voluptatem perferendis labore voluptatibus libero vitae veniam!</p>
-      <div class="row">
-        <div class="col">
-          <a class="btn btn-lg btn-primary" href="#" role="button" onclick="getCurrentTime()">Show Time</a>
-        </div>
-        <div class="col">
-          <div id="time">Placeholder</div>
+  <div class="container-fluid">
+    <div class="jumbotron mt-2">
+      <h1>Influence of COVID-19 on China's Economic Activities</h1>
+      <h4>Using air quality/pollutant data as proxy</h3>
+    </div>
+
+    <div class="row">
+      <div class="col-8">
+        <a class="btn btn-lg btn-primary" href="#" role="button" onclick="getCurrentTime()">Show Current Time</a>
+        <div id="time">Click to see</div>
+      </div>
+      <div class="col-4">
+        <div class="input-group mb-3 input-daterange">
+          <input type="text" class="form-control" value="20-04-2020" onclick="pickDate()">
+          <span class="input-group-text">to</span>
+          <input type="text" class="form-control" value="20-04-2020" onclick="pickDate()">
+          <div class="input-group-append">
+            <a class="btn btn-large btn-outline-secondary" href="#" onclick="getCurrentTime()">
+              <i class="fas fa-calendar-alt"></i>
+            </a>
+          </div>
+
         </div>
       </div>
     </div>
+
   </div>
 
 
   <script src="./js/jquery-3.5.0.slim.min.js"></script>
   <script src="https://unpkg.com/@popperjs/core@2"></script>
   <script src="./js/bootstrap.min.js"></script>
+  <script src="./js/bootstrap-datepicker-1.9.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs=" crossorigin="anonymous"></script>
 
   <script src="./js/moment.js"></script>
   <script src="./js/index.js"></script>

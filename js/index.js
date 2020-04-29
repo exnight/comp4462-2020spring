@@ -5,3 +5,11 @@ const getCurrentTime = () => {
   console.log(d);
   document.getElementById("time").innerHTML = d;
 };
+
+const pickDate = () => {
+  $('.input-daterange input').each(function() {
+    $(this).datepicker({
+      format: "dd-mm-yyyy"
+    }).show();
+  });
+};
