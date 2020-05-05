@@ -2,7 +2,6 @@ console.log('main.js loaded');
 
 const getCurrentTime = () => {
   let d = moment().format();
-  console.log(d);
   document.getElementById("time").innerHTML = d;
 };
 
@@ -13,6 +12,23 @@ const pickDate = () => {
     }).show();
   });
 };
+
+const DataFrame = dfjs.DataFrame;
+let dfs = [];
+const load_data = async function() {
+  await DataFrame.fromCSV('data/2020/20200101.csv').then(data => dfs.push(data));
+  df = dfs[0]
+  let location = 'Wuhan';
+  let t0 = 0;
+  let t1 = 3;
+  let obs_type = 'PM2.5';
+  df.filter(row => {
+    let hour = parseInt(row.get('hour'), 10);
+    return (hour >= t0) & (hour <= t1) & (row.get('type') == obs_type)
+  }).select('hour', 'type', location).show();
+}
+
+load_data();
 
 const geoMapSpec = {
   "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
