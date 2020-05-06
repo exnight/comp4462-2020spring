@@ -16,16 +16,17 @@ const pickDate = () => {
 const DataFrame = dfjs.DataFrame;
 let dfs = [];
 const load_data = async function() {
-  await DataFrame.fromCSV('data/2020/20200101.csv').then(data => dfs.push(data));
-  df = dfs[0]
-  let location = 'Wuhan';
+  await DataFrame.fromCSV('data/trans_2020/20200101.csv').then(data => dfs.push(data));
+  let df = dfs[0];
+  let loc = 'Wuhan';
   let t0 = 0;
   let t1 = 3;
   let obs_type = 'PM2.5';
-  df.filter(row => {
+  let res = df.filter(row => {
     let hour = parseInt(row.get('hour'), 10);
-    return (hour >= t0) & (hour <= t1) & (row.get('type') == obs_type)
-  }).select('hour', 'type', location).show();
+    return (hour >= t0) & (hour <= t1) & (row.get('location') == loc)
+  }).select('hour', obs_type).toJSON();
+  console.log(res);
 }
 
 load_data();
@@ -41,27 +42,30 @@ const geoMapSpec = {
       "feature": "CHN_adm1"
     }
   },
-  // "transform": [{
-  //   "lookup": "properties.NAME_1",
-  //   "from": {
-  //     "data": {
-  //       "url": "data/2020/20200101.csv"
-  //     },
-  //     "key": "id",
-  //     "fields": ["rate"]
-  //   }
-  // }],
+  "transform": [{
+    "lookup": "properties.NAME_1",
+    "from": {
+      "data": {
+        "url": "data/trans_2020/20200101.csv"
+      },
+      "key": "location",
+      "fields": ["AQI"]
+    }
+  }],
   "projection": {
     "type": "mercator"
   },
   "mark": {
     "type": "geoshape",
-    "fill": "#eee",
     "stroke": "#757575",
     "strokeWidth": 0.5
   },
   "encoding": {
-    "color": {"value": "#eee"},
+    "color": {
+      "field": "AQI",
+      "type": "quantitative",
+      // "scale": {"scheme": "Oranges"}
+    },
     "tooltip": [
       {"field": "properties.NAME_1", "type": "nominal", "title": "Name"},
       // {"field": "properties.NL_NAME_1", "type": "nominal", "title": "CH Name"}
