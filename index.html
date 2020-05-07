@@ -36,7 +36,95 @@
       </div>
     </div>
 
-    <div id="map"></div>
+    <div class="row">
+
+      <div class="col-2">
+        <div class="text-info">Please Select Up to 3 Pollutants</div><br>
+        <div class="dropdown-mul-2">
+          <select style="display:none"  name="" id="mul-2-1" multiple placeholder="Select">
+            <option name="pollutant" value="SO2">SO2</option>
+            <option name="pollutant" value="NO2">NO2</option>
+            <option name="pollutant" value="PM2.5">PM2.5</option>
+            <option name="pollutant" value="O3">O3</option>
+            <option name="pollutant" value="CO">CO</option>
+            <option name="pollutant" value="PM10">PM10</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="text-info">Please Select Up to 3 Cities for Comparison</div><br>
+        <div class="dropdown-mul-2">
+          <select style="display:none"  name="" id="mul-2-2" multiple placeholder="Select">
+            <option value="Beijing">Beijing</option>
+            <option value="Wuhan">Wuhan</option>
+            <option value="Shanghai">Shanghai</option>
+            <option value="Zhengzhou">Zhengzhou</option>
+            <option value="Guangzhou">Guangzhou</option>
+            <option value="Tianjin">Tianjin</option>
+            <option value="Nanjing">Nanjing</option>
+            <option value="Haikou">Haikou</option>
+            <option value="Shijiazhuang">Shijiazhuang</option>
+            <option value="Changsha">Changsha</option>
+            <option value="Hangzhou">Hangzhou</option>
+            <option value="Kunming">Kunming</option>
+            <option value="Shenyang">Shenyang</option>
+            <option value="Haerbin">Haerbin</option>
+            <option value="Dalian">Dalian</option>
+            <option value="Jinan">Jinan</option>
+            <option value="Taiyuan">Taiyuan</option>
+            <option value="Nanchang">Nanchang</option>
+            <option value="Hefei">Hefei</option>
+            <option value="Fuzhou">Fuzhou</option>
+            <option value="Nanning">Nanning</option>
+            <option value="Chengdu">Chengdu</option>
+            <option value="Chongqing">Chongqing</option>
+            <option value="Lanzhou">Lanzhou</option>
+          </select>
+        </div>
+        <br><br>
+      </div>
+      <div class="col-2">
+        <input type="button" onclick="outputChoice()" value="Submit"><br> 
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div class="col-8">
+        <div class="text-info"><b>National Overview</b></div><br>
+        <div id="map"></div>
+      </div>
+
+      <div class="col-4">
+        <div class="text-info">Pollutant of selected city</div><br>
+        <img src="placeholder_image/cat.JPG" style="width:240px;height:240px"><br>
+        <br>
+        <div class="text-info">Pollutant of city A</div><br>
+        <img src="placeholder_image/cat3.jfif" style="width:240px;height:240px"><br>
+        <br>
+        <div class="text-info">Pollutant of city B</div><br>
+        <img src="placeholder_image/cat4.jfif" style="width:240px;height:240px"><br>
+        <br>
+      </div>
+
+    </div>
+
+    <div class="row">
+      <div class="col-4">
+        <div class="text-info">Outlier Detection</div><br>
+        <img src="placeholder_image/cat5.JPG" style="width:240px;height:240px"><br>
+        <br>
+      </div>
+      <div class="col-4">
+        <div class="text-info">Other graphs</div><br>
+        <img src="placeholder_image/cat6.JPG" style="width:240px;height:240px"><br>
+        <br>
+      </div>
+    </div>
+
+
 
   </div>
 
@@ -54,5 +142,17 @@
   <script src="./js/vega/vega_embed-6.6.min.js"></script>
 
   <script src="./js/index.js"></script>
+
+  <script src="//code.jquery.com/jquery.min.js"></script>
+  <link rel="stylesheet" href="css/jquery.dropdown.css">
+  <script src="js/jquery.dropdown.js"></script>
+
 </body>
+<script>
+$('.dropdown-mul-2').dropdown({
+      limitCount: 3,
+      searchable: true,
+      multipleMode: 'label',
+    });
+</script>
 </html>
