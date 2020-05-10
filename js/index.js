@@ -14,42 +14,93 @@ const pickDate = () => {
 };
 
 const DataFrame = dfjs.DataFrame;
-let dfs = [];
+
+const yearArray = ['2018', '2019', '2020'];
+let dfs = {
+  'df_2018': [],
+  'df_2019': [],
+  'df_2020': []
+};
+
 const load_data = async function() {
-  const startDate = '2020-01-01';
-  const endDate = '2020-01-04';
-  let currDate = moment(startDate).startOf('day').subtract(1, 'days');
-  let lastDate = moment(endDate).startOf('day');
-  let dates = [];
+  const startDate = '01-01';
+  const endDate = '01-04';
 
-  while(currDate.add(1, 'days').diff(lastDate) < 0) {
-    dates.push(currDate.clone().format('YYYYMMDD'));
-  }
+  for (let idx = 0; idx < yearArray.length; idx++) {
+    const year = yearArray[idx];
+    let currDate = moment(`${year}-${startDate}`).startOf('day').subtract(1, 'days');
+    let lastDate = moment(`${year}-${endDate}`).startOf('day');
+    let dates = [];
 
-  for (let idx = 0; idx < dates.length; idx++) {
-    await DataFrame.fromCSV(`data/by_province/2020/${dates[idx]}.csv`).then(data => dfs.push(data));
-  }
+    while(currDate.add(1, 'days').diff(lastDate) < 0) {
+      dates.push(currDate.clone().format('YYYYMMDD'));
+    }
 
-  let agg_df = dfs[0];
-  if (dfs.length > 1) {
-    for (let idx = 1; idx < dfs.length; idx++) {
-      dfs[idx].toArray().forEach(row => {
-        agg_df = agg_df.push(row);
-      });
+    for (let idx = 0; idx < dates.length; idx++) {
+      await DataFrame.fromCSV(`data/by_province/${year}/${dates[idx]}.csv`).then(data => dfs[`df_${year}`].push(data));
+    }
+
+    dfs[`agg_${year}`] = dfs[`df_${year}`][0];
+    if (dfs[`df_${year}`].length > 1) {
+      for (let idx = 1; idx < dfs[`df_${year}`].length; idx++) {
+        dfs[`df_${year}`][idx].toArray().forEach(row => {
+          dfs[`agg_${year}`] = dfs[`agg_${year}`].push(row);
+        });
+      }
     }
   }
 
-  let t0 = 0;
-  let t1 = 23;
+  let t0 = 9;
+  let t1 = 21;
   let obs_type = 'AQI';
 
-  let df = agg_df.filter(row => {
+  let df_2020 = dfs['agg_2020'].filter(row => {
     let hour = parseInt(row.get('hour'), 10);
     return (hour >= t0) & (hour <= t1)
   });
-  map_df = dfs[0].select('province', obs_type).groupBy('province')
-    .aggregate(group => group.stat.mean(obs_type)).rename('aggregation', obs_type)
-  map_data = map_df.toCollection();
+
+  map_2020 = df_2020.select('province', obs_type).groupBy('province')
+    .aggregate(group => group.stat.mean(obs_type)).rename('aggregation', obs_type);
+
+  map_2020 = map_2020.sortBy('province');
+
+  let map_mode = 'absolute';
+  map_mode = 'relative';
+
+  if (map_mode === 'relative') {
+    let df_2018 = dfs['agg_2018'].filter(row => {
+      let hour = parseInt(row.get('hour'), 10);
+      return (hour >= t0) & (hour <= t1)
+    });
+
+    map_2018 = df_2018.select('province', obs_type).groupBy('province')
+    .aggregate(group => group.stat.mean(obs_type)).rename('aggregation', obs_type);
+
+    let df_2019 = dfs['agg_2019'].filter(row => {
+      let hour = parseInt(row.get('hour'), 10);
+      return (hour >= t0) & (hour <= t1)
+    });
+
+    map_2019 = df_2019.select('province', obs_type).groupBy('province')
+    .aggregate(group => group.stat.mean(obs_type)).rename('aggregation', obs_type);
+
+    map_2018 = map_2018.sortBy('province');
+    map_2019 = map_2019.sortBy('province');
+
+    let data_2018 = map_2018.toDict()[obs_type];
+    let data_2019 = map_2019.toDict()[obs_type];
+    let data_2020 = map_2020.toDict()[obs_type];
+
+    data = data_2018.map((e, i) => (e + data_2019[i])/2);
+    data = data.map((e, i) => data_2020[i] - e);
+
+    map_data = new DataFrame({
+      column1: map_2020.toDict()['province'],
+      column2: data,
+    }, ['province', obs_type]).toCollection();
+  } else {
+    map_data = map_2020.toCollection();
+  }
 
   const geoMapSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
@@ -79,7 +130,7 @@ const load_data = async function() {
       "color": {
         "field": obs_type,
         "type": "quantitative",
-        "scale": {"scheme": "Oranges"}
+        "scale": {"scheme": "yellowgreenblue"}
       },
       "tooltip": [
         {"field": "properties.NAME_1", "type": "nominal", "title": "Name"},
