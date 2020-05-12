@@ -22,10 +22,17 @@ let dfs = {
   'df_2020': []
 };
 
-const load_data = async function() {
-  const startDate = '01-01';
-  const endDate = '01-04';
+// TODO: connect controller with data
+const startDate = '01-01';
+const endDate = '01-04';
+const t0 = 9;
+const t1 = 19;
+// TODO: . in column name
+const obs_type = "PM10";
+let map_mode = 'absolute';
+map_mode = 'relative';
 
+const main_func = async function() {
   for (let idx = 0; idx < yearArray.length; idx++) {
     const year = yearArray[idx];
     let currDate = moment(`${year}-${startDate}`).startOf('day').subtract(1, 'days');
@@ -50,10 +57,11 @@ const load_data = async function() {
     }
   }
 
-  let t0 = 9;
-  let t1 = 21;
-  let obs_type = 'AQI';
+  // TODO: add other plotting functions here
+  plot_map();
+};
 
+const plot_map = () => {
   let df_2020 = dfs['agg_2020'].filter(row => {
     let hour = parseInt(row.get('hour'), 10);
     return (hour >= t0) & (hour <= t1)
@@ -63,9 +71,6 @@ const load_data = async function() {
     .aggregate(group => group.stat.mean(obs_type)).rename('aggregation', obs_type);
 
   map_2020 = map_2020.sortBy('province');
-
-  let map_mode = 'absolute';
-  map_mode = 'relative';
 
   if (map_mode === 'relative') {
     let df_2018 = dfs['agg_2018'].filter(row => {
@@ -138,9 +143,8 @@ const load_data = async function() {
       ]
     }
   }
-  await vegaEmbed('#map', geoMapSpec);
+  vegaEmbed('#map', geoMapSpec);
 }
 
-load_data();
-
-
+// entry point
+main_func();
