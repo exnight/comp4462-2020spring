@@ -207,6 +207,8 @@ const startDateCity = '01-01';
 const endDateCity = '04-01';
 
 const load_data = async function() {
+  console.log('load_data');
+
   for (let idx = 0; idx < yearArray.length; idx++) {
     const year = yearArray[idx];
     let currDate = moment(`${year}-${startDateCity}`).startOf('day').subtract(1, 'days');
@@ -217,49 +219,71 @@ const load_data = async function() {
       dates.push(currDate.clone().format('YYYYMMDD'));
     }
 
+    console.log('date generated');
     //read all the data.
+
+    
+    // TODO: 2020 still not solved, 02-29 not found. need to skip this date.
     for (let idx = 0; idx < dates.length; idx++) {
       await DataFrame.fromCSV(`data/by_city/${year}/${dates[idx]}.csv`).then(data => dfcity[`df_${year}`].push(data));
     }
+
+    console.log('data read');
 
     //aggregate all the data into three files in years.
     dfcity[`agg_${year}`] = dfcity[`df_${year}`][0];
     if (dfcity[`df_${year}`].length > 1) {
       for (let idx = 1; idx < dfcity[`df_${year}`].length; idx++) {
-        dfcity[`df_${year}`][idx].toArray().forEach(row => {
-          dfcity[`agg_${year}`] = dfcity[`agg_${year}`].push(row);
-        });
+
+        // union could be faster yet correct
+        dfcity[`agg_${year}`] = dfcity[`agg_${year}`].union(dfcity[`df_${year}`][idx])
+        
+        
+        // dfcity[`df_${year}`][idx].toArray().forEach(row => {
+        //   dfcity[`agg_${year}`] = dfcity[`agg_${year}`].push(row);
+        // });
       } 
     }
 
-    // add year label to the dataframes.
-    dfcity[`agg_${year}`] = dfcity[`agg_${year}`].map(row => row.set('year', row.get('date').slice(0, 4)));
+    console.log(`${year}` + 'data aggregated');
 
-    // reindex the hour to be accumulating.
-    height = dfcity[`agg_${year}`].dim()[0];
-    for(let h = 0; h < height; h++){
-      dfcity[`agg_${year}`] = dfcity[`agg_${year}`].setRow(h, row.set('agg_hour', `${h}`));
-    }
+    // add year label to the dataframes.
+    dfcity[`agg_${year}`] = dfcity[`agg_${year}`].withColumn('year', () => `${year}`);
+
+    console.log('year added');
   }
 };
 
+//call load_data to prepare the data of line_chart
 load_data();
 
+//name the pollutant ahead
 let pollutant = 'NO2';
 
+//select data with the given location and pollutant's catagory
+//return one dataframe of all three years 
 function selectData(loc, pollutant) {
   let dfSelected = [];
   for (let i = 0; i < yearArray.length; i++){
     const year = yearArray[i];
-    dfSelected.push(dfs[`agg_${year}`].select('date', 'hour', 'location', 'year', 'agg_hour', pollutant).
-      filter(row => row.get('location') === loc));
+    //select data according to the requirement and aggregate the hour.
+    tempDf = dfcity[`agg_${year}`].select('date', 'hour', 'location', 'year', pollutant)
+      .filter(row => row.get('location') === loc).withColumn('agg_hour', (row, index) => index);
+    
+    console.log('hour aggregated');
+    
+    dfSelected.push(tempDf);
   }
   let finalDf = dfSelected[0].union(dfSelected[1]).union(dfSelected[2]);
   return finalDf;
 }
 
+// pre-define a length of dates for getting the mean.
 const period = 15
 
+
+//generate the data that provides mean of periods of days
+//returns data of three years.
 function getBarData(period, pollutant, df){
 
   let dfBar = df;
@@ -296,7 +320,7 @@ function getBarData(period, pollutant, df){
 // define the names of maps for use
 maps = ['#map1', '#map2', '#map3'];
 
-
+//Print the required curve.
 //Should work now.
 const plot_chart = (locs, pollutant) => {
   for(let i = 0; i < locs.length; i++){
