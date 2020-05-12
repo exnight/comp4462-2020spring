@@ -17,15 +17,15 @@
     </div>
 
     <div class="row">
-      <div class="col-8">
+      <div class="col-2">
         <a class="btn btn-lg btn-primary" href="#" role="button" onclick="getCurrentTime()">Show Current Time</a>
         <div id="time">Click to see</div>
       </div>
       <div class="col-4">
         <div class="input-group mb-3 input-daterange">
-          <input type="text" class="form-control" value="20-04-2020" onclick="pickDate()">
+          <input type="text" class="form-control" id="start_day" value="select start" onclick="pickDate()">
           <span class="input-group-text">to</span>
-          <input type="text" class="form-control" value="20-04-2020" onclick="pickDate()">
+          <input type="text" class="form-control" id="end_day" value="select end" onclick="pickDate()">
           <div class="input-group-append">
             <a class="btn btn-large btn-outline-secondary" href="#" onclick="getCurrentTime()">
               <i class="fas fa-calendar-alt"></i>
@@ -44,7 +44,7 @@
           <select style="display:none"  name="" id="mul-2-1" multiple placeholder="Select">
             <option name="pollutant" value="SO2">SO2</option>
             <option name="pollutant" value="NO2">NO2</option>
-            <option name="pollutant" value="PM2.5">PM2.5</option>
+            <option name="pollutant" value="PM2_5">PM2_5</option>
             <option name="pollutant" value="O3">O3</option>
             <option name="pollutant" value="CO">CO</option>
             <option name="pollutant" value="PM10">PM10</option>
@@ -84,13 +84,17 @@
         </div>
         <br><br>
       </div>
-      <div class="col-4">
-        <div class="text-info">Please Select Time of the day</div><br>
-        <input type="button" value="24 Hour"></br>
-        <input type="button" value="9am to 6pm"></br>
+      <div class="col-2">
+        <div class="text-info">Please Select Hour Range</div><br>
+        <div class="dropdown-mul-1">
+          <select style="display:none"  name="" id="mul-2-3" multiple placeholder="Select">
+            <option name="timerange" value="All Day">All Day</option>
+            <option name="timerange" value="9am-6pm">9am-6pm</option>
+          </select>
+        </div>
       </div>
       <div class="col-2">
-        <input type="button" onclick="outputChoice()" value="Submit"><br>
+        <input type="button" onclick="" value="Submit"><br>
       </div>
 
     </div>
@@ -164,6 +168,8 @@
   </script>
 
   <script src="./js/index.js"></script>
+
+
 
 </body>
 </html>

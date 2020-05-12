@@ -8,10 +8,52 @@ const getCurrentTime = () => {
 const pickDate = () => {
   $('.input-daterange input').each(function() {
     $(this).datepicker({
-      format: "dd-mm-yyyy"
+      format: "dd-mm"
     }).show();
   });
 };
+
+
+function getPollutant()
+{
+  var myselect=document.getElementById("mul-2-1");
+  var index=myselect.selectedIndex ;
+  var myvalue=myselect.options[index].value;
+
+  alert(myvalue);
+  return myvalue
+}
+
+function getHourRange()
+{
+  var myselect=document.getElementById("mul-2-3");
+  var index=myselect.selectedIndex ;
+  if (index==0)
+  {
+    return [0,23]
+  }
+  if (index==1)
+  {
+    return [9,18]
+  }
+}
+
+function getDate()
+{
+  //check whether the selected day is valid
+  
+  var starting_day=document.getElementById("start_day").value;
+  var ending_day=document.getElementById("end_day").value;
+  
+    if (starting_day.substr(3)=="01" || starting_day.substr(3)=="02" || starting_day.substr(3)=="03")
+    {
+      if (ending_day.substr(3)=="01" || ending_day.substr(3)=="02" || ending_day.substr(3)=="03")
+      {
+        return [starting_day, ending_day]
+      }
+    }
+  alert("Please select two days between 1st Jan to 31st Mar and submit again")
+}
 
 const DataFrame = dfjs.DataFrame;
 
@@ -28,9 +70,10 @@ const endDate = '01-04';
 const t0 = 9;
 const t1 = 19;
 // TODO: . in column name
-const obs_type = "PM10";
+const obs_type = getPollutant();
 let map_mode = 'absolute';
 map_mode = 'relative';
+
 
 const main_func = async function() {
   for (let idx = 0; idx < yearArray.length; idx++) {
