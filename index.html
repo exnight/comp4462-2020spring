@@ -23,9 +23,9 @@
       </div>
       <div class="col-4">
         <div class="input-group mb-3 input-daterange">
-          <input type="text" class="form-control" id="start_day" value="select start" onclick="pickDate()">
+          <input type="text" class="form-control" id="start_day" value="01-01" onclick="pickDate()">
           <span class="input-group-text">to</span>
-          <input type="text" class="form-control" id="end_day" value="select end" onclick="pickDate()">
+          <input type="text" class="form-control" id="end_day" value="03-31" onclick="pickDate()">
           <div class="input-group-append">
             <a class="btn btn-large btn-outline-secondary" href="#" onclick="getCurrentTime()">
               <i class="fas fa-calendar-alt"></i>
@@ -42,7 +42,7 @@
         <div class="text-info">Please Select 1 Pollutant</div><br>
         <div class="dropdown-mul-1">
           <select style="display:none"  name="" id="mul-2-1" multiple placeholder="Select">
-            <option name="pollutant" value="SO2">SO2</option>
+            <option name="pollutant" value="SO2" selected>SO2</option>
             <option name="pollutant" value="NO2">NO2</option>
             <option name="pollutant" value="PM2_5">PM2_5</option>
             <option name="pollutant" value="O3">O3</option>
@@ -56,7 +56,7 @@
         <div class="text-info">Please Select Up to 3 Cities for Comparison</div><br>
         <div class="dropdown-mul-2">
           <select style="display:none"  name="" id="mul-2-2" multiple placeholder="Select">
-            <option value="Beijing">Beijing</option>
+            <option value="Beijing" selected>Beijing</option>
             <option value="Wuhan">Wuhan</option>
             <option value="Shanghai">Shanghai</option>
             <option value="Zhengzhou">Zhengzhou</option>
@@ -88,7 +88,7 @@
         <div class="text-info">Please Select Hour Range</div><br>
         <div class="dropdown-mul-1">
           <select style="display:none"  name="" id="mul-2-3" multiple placeholder="Select">
-            <option name="timerange" value="All Day">All Day</option>
+            <option name="timerange" value="All Day" selected>All Day</option>
             <option name="timerange" value="9am-6pm">9am-6pm</option>
           </select>
         </div>
