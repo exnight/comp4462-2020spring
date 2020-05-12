@@ -71,6 +71,7 @@ const t0 = 9;
 const t1 = 19;
 // TODO: . in column name
 // const obs_type = getPollutant();
+obs_type = 'NO2';
 let map_mode = 'absolute';
 map_mode = 'relative';
 
@@ -190,7 +191,7 @@ const plot_map = () => {
 }
 
 // entry point
-// main_func();
+main_func();
 
 
 // ----------------------------------------------------------
@@ -232,7 +233,7 @@ const load_data = async function() {
     }
 
     // add year label to the dataframes.
-    dfcity[`agg_${year}`].map(row => row.set('year', row.get('date').slice(0, 4)));
+    dfcity[`agg_${year}`] = dfcity[`agg_${year}`].map(row => row.set('year', row.get('date').slice(0, 4)));
 
     // reindex the hour to be accumulating.
     height = dfcity[`agg_${year}`].dim()[0];
@@ -240,7 +241,6 @@ const load_data = async function() {
       dfcity[`agg_${year}`] = dfcity[`agg_${year}`].setRow(h, row.set('agg_hour', `${h}`));
     }
   }
-  console.log(dfcity);
 };
 
 load_data();
@@ -258,7 +258,7 @@ function selectData(loc, pollutant) {
   return finalDf;
 }
 
-let period = 15
+const period = 15
 
 function getBarData(period, pollutant, df){
 
@@ -281,7 +281,7 @@ function getBarData(period, pollutant, df){
         date < parseInt(middleDate[j], 10));
       }).stat.mean(pollutant);
 
-      dfBar[idx].filter(row => {
+      dfBar[idx] = dfBar[idx].filter(row => {
         let date = parseInt(row.get('date'), 10);
         return (date >= parseInt(middleDate[j].subtract(period, 'days'), 10) &
         date < parseInt(middleDate[j], 10));
@@ -293,10 +293,11 @@ function getBarData(period, pollutant, df){
   return finalDf;
 }
 
+// define the names of maps for use
 maps = ['#map1', '#map2', '#map3'];
 
 
-//unfinished. Don't know how to plot bars and lines at the same time.
+//Should work now.
 const plot_chart = (locs, pollutant) => {
   for(let i = 0; i < locs.length; i++){
     selected_df = selectData(locs[i], pollutant);
