@@ -191,3 +191,120 @@ const plot_map = () => {
 
 // entry point
 main_func();
+
+
+// ----------------------------------------------------------
+// LIU Hanmo starting below
+
+const yearArray = ['2018', '2019', '2020'];
+let dfcity = {
+  'df_2018': [],
+  'df_2019': [],
+  'df_2020': []
+};
+
+const startDate = '01-01';
+const endDate = '04-01';
+
+const load_data = async function() {
+  for (let idx = 0; idx < yearArray.length; idx++) {
+    const year = yearArray[idx];
+    let currDate = moment(`${year}-${startDate}`).startOf('day').subtract(1, 'days');
+    let lastDate = moment(`${year}-${endDate}`).startOf('day');
+    let dates = [];
+
+    while(currDate.add(1, 'days').diff(lastDate) < 0) {
+      dates.push(currDate.clone().format('YYYYMMDD'));
+    }
+
+    for (let idx = 0; idx < dates.length; idx++) {
+      await DataFrame.fromCSV(`data/by_city/${year}/${dates[idx]}.csv`).then(data => dfcity[`df_${year}`].push(data));
+    }
+
+    dfcity[`agg_${year}`] = dfcity[`df_${year}`][0];
+    if (dfcity[`df_${year}`].length > 1) {
+      for (let idx = 1; idx < dfcity[`df_${year}`].length; idx++) {
+        dfcity[`df_${year}`][idx].toArray().forEach(row => {
+          dfcity[`agg_${year}`] = dfcity[`agg_${year}`].push(row);
+        });
+      } 
+    }
+
+    height = dfcity[`agg_${year}`].dim()[0];
+    for(let h = 0; h < height; h++){
+      dfcity[`agg_${year}`].setRow(h, row => row.set('hour', `${h}`));
+    }
+  }
+
+};
+
+load_data();
+
+let pollutant = 'NO2';
+
+function selectData(loc, pollutant) {
+  let dfSelected = [];
+  for (let i = 0; i < yearArray.length; i++){
+    const year = yearArray[i];
+    dfSelected.push(dfs[`agg_${year}`].select('date', 'hour', 'location', pollutant).
+      filter(row => row.get('location') === loc));
+  }
+  return dfSelected;
+};
+
+let period = 15
+
+function getBarData(period, pollutant, df){
+
+  let dfBar = df;
+
+  let startDate = '01-01';
+  let endDate = '03-31';
+  let middleDate = [];
+  for (let idx = 0; idx < yearArray.length; idx++) {
+    const year = yearArray[idx];
+    let currDate = moment(`${year}-${startDate}`).startOf('day').subtract(1, 'days');
+    let lastDate = moment(`${year}-${endDate}`).startOf('day');
+
+    while(currDate.add(period, 'days').diff(lastDate) <= 0) {
+      middleDate.push(currDate.clone().format('YYYYMMDD'));
+    }
+
+    for(let j = 0; j < middleDate.length; j++){
+      let mean = dfBar[idx].filter(row => {
+        let date = parseInt(row.get('date'), 10);
+        return (date >= parseInt(middleDate[j].subtract(period, 'days'), 10) &
+        date < parseInt(middleDate[j], 10));
+      }).stat.mean(pollutant);
+
+      dfBar[idx].filter(row => {
+        let date = parseInt(row.get('date'), 10);
+        return (date >= parseInt(middleDate[j].subtract(period, 'days'), 10) &
+        date < parseInt(middleDate[j], 10));
+      }).map(row => row.set(pollutant, mean))
+    }   
+  }
+  return dfBar;
+}
+
+maps = ['#map1', '#map2', '#map3'];
+
+const plot_chart = (locs, pollutant) => {
+  for(let i = 0; i < locs.length; i++){
+    selected_df = selectData(locs[i], pollutant)
+    selected_df_bar = getBarData(period, pollutant, selected_df);
+    const lineChart = {
+      '$schema' : "https://vega.github.io/schema/vega-lite/v4.json",
+      "width": 300, "height": 200,
+      "data": {"values": dfSelected[0]},
+      "encoding": {
+        'x': {'field': 'date', 'type': "temporal"},
+        'y': {'field': pollutant, 'type': 'quantitative'},
+        'color': {'field': 'symbol', 'type': 'nominal'}
+      }
+    }
+
+    vegaEmbed(maps[i], lineChart)
+  }
+}
+
