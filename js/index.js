@@ -123,9 +123,7 @@ const load_data = async function() {
     dfs[`agg_${year}`] = dfs[`df_${year}`][0];
     if (dfs[`df_${year}`].length > 1) {
       for (let idx = 1; idx < dfs[`df_${year}`].length; idx++) {
-        dfs[`df_${year}`][idx].toArray().forEach(row => {
-          dfs[`agg_${year}`] = dfs[`agg_${year}`].push(row);
-        });
+        dfs[`agg_${year}`] = dfs[`agg_${year}`].union(dfs[`df_${year}`][idx]);
       }
     }
   }
