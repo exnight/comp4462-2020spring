@@ -115,7 +115,7 @@ const main_func = async function() {
 
   await load_data();
 
-  plot_chart(['Wuhan'], 'NO2', '01-01', '01-24');
+  plot_chart(['Wuhan', 'Beijing', 'Shanghai'], 'NO2', '01-01', '02-01');
   //Hammer ===============================================
 
   // TODO: add other plotting functions here
@@ -348,7 +348,11 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
     readableDf = selected_df.toCollection();
     const lineChart = {
       '$schema' : "https://vega.github.io/schema/vega-lite/v4.json",
-      "width": 400, "height": 400,
+      "width": 600, "height": 400,
+      "title": {
+        "text": locs[i],
+        "anchor": "start"
+      },
       "data": {"values": readableDf},
       'layer': [
           {
@@ -356,7 +360,7 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
         "encoding": {
           'x': {'field': 'agg_hour', 'type': 'quantitative'},
           'y': {'field': pollutant, 'type': 'quantitative'},
-          'color': {'field': 'year', 'type': 'nominal'}
+          'color': {'field': 'year', 'type': 'nominal'},
         }
       },
       {
