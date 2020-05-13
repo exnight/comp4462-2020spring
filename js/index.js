@@ -8,7 +8,7 @@ const getCurrentTime = () => {
 const pickDate = () => {
   $('.input-daterange input').each(function() {
     $(this).datepicker({
-      format: "dd-mm"
+      format: "mm-dd"
     }).show();
   });
 };
