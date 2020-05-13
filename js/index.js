@@ -119,12 +119,8 @@ const update_func = async function() {
     console.log(startDate, endDate);
     await load_data();
   }
-
-  if (d0 != startDate || d1 != endDate) {
-    startDate = d0;
-    endDate = d1;
-    plot_chart(locs, obs_type, startDate, endDate);
-  }
+  
+  plot_chart(locs, obs_type, startDate, endDate);
 
   plot_map();
 };
@@ -296,7 +292,7 @@ const load_data_city = async function() {
 
 //select data with the given location and pollutant's catagory
 //return one dataframe of all three years 
-selectData = function(loc, pollutant, startDate, endDate) {
+selectData = (loc, pollutant, startDate, endDate) => {
   console.log('selectData is called')
   let dfSelected = [];
   for (let i = 0; i < yearArray.length; i++){
@@ -376,7 +372,7 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
     readableDf = selected_df.toCollection();
     const lineChart = {
       '$schema' : "https://vega.github.io/schema/vega-lite/v4.json",
-      "width": 600, "height": 400,
+      "width": 600, "height": 300,
       "title": {
         "text": locs[i],
         "anchor": "start"
