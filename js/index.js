@@ -204,7 +204,7 @@ let dfcity = {
 };
 
 const startDateCity = '01-01';
-const endDateCity = '04-01';
+const endDateCity = '03-01';
 
 const load_data = async function() {
   console.log('load_data');
@@ -232,7 +232,7 @@ const load_data = async function() {
       await DataFrame.fromCSV(`data/by_city/${year}/${dates[idx]}.csv`).then(data => dfcity[`df_${year}`].push(data));
     }
 
-    console.log('data read');
+    console.log(`${year}` + ' data read');
 
     //aggregate all the data into three files in years.
     dfcity[`agg_${year}`] = dfcity[`df_${year}`][0];
@@ -249,12 +249,12 @@ const load_data = async function() {
       } 
     }
 
-    console.log(`${year}` + 'data aggregated');
+    console.log(`${year} ` + 'data aggregated');
 
     // add year label to the dataframes.
     dfcity[`agg_${year}`] = dfcity[`agg_${year}`].withColumn('year', () => `${year}`);
 
-    console.log('year added');
+    console.log('year added for ' + `${year}`);
   }
 };
 
@@ -264,9 +264,10 @@ load_data();
 //name the pollutant ahead
 let pollutant = 'NO2';
 
+//BUG HERE
 //select data with the given location and pollutant's catagory
 //return one dataframe of all three years 
-function selectData(loc, pollutant) {
+selectData = async function(loc, pollutant) {
   let dfSelected = [];
   for (let i = 0; i < yearArray.length; i++){
     const year = yearArray[i];
@@ -274,8 +275,9 @@ function selectData(loc, pollutant) {
     tempDf = dfcity[`agg_${year}`].select('date', 'hour', 'location', 'year', pollutant)
       .filter(row => row.get('location') === loc).withColumn('agg_hour', (row, index) => index);
     
-    console.log('hour aggregated');
-    
+    console.log('hour aggregated for' + ` ${year}`);
+    console.log(tempDf.toCollection());
+
     dfSelected.push(tempDf);
   }
   let finalDf = dfSelected[0].union(dfSelected[1]).union(dfSelected[2]);
@@ -285,10 +287,12 @@ function selectData(loc, pollutant) {
 // pre-define a length of dates for getting the mean.
 const period = 15
 
+sd = selectData('Wuhan', 'NO2');
 
+//NOT TESTED YET
 //generate the data that provides mean of periods of days
 //returns data of three years.
-function getBarData(period, pollutant, df){
+getBarData = async function(period, pollutant, df){
 
   let dfBar = df;
 
