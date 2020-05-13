@@ -216,13 +216,17 @@ const load_data = async function() {
     let dates = [];
 
     while(currDate.add(1, 'days').diff(lastDate) < 0) {
+      // skip the date 02-29
+      if(currDate.diff('2020-02-29') === 0){
+        continue;
+      }
       dates.push(currDate.clone().format('YYYYMMDD'));
     }
 
     console.log('date generated');
     //read all the data.
 
-    
+
     // TODO: 2020 still not solved, 02-29 not found. need to skip this date.
     for (let idx = 0; idx < dates.length; idx++) {
       await DataFrame.fromCSV(`data/by_city/${year}/${dates[idx]}.csv`).then(data => dfcity[`df_${year}`].push(data));
