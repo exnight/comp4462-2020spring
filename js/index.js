@@ -296,13 +296,16 @@ getBarData = async function(period, pollutant, df){
 
   let dfBar = df;
 
-  let middleDate = [];
   for (let idx = 0; idx < yearArray.length; idx++) {
+    let middleDate = [];
     const year = yearArray[idx];
     let currDate = moment(`${year}-${startDateCity}`).startOf('day').subtract(1, 'days');
     let lastDate = moment(`${year}-${endDateCity}`).startOf('day');
 
     while(currDate.add(period, 'days').diff(lastDate) <= 0) {
+      if(currDate.diff('2020-02-29') > 0 & currDate.subtract(period, 'days').diff('2020-02-29') < 0){
+        currDate.add(1, 'days');
+      }
       middleDate.push(currDate.clone().format('YYYYMMDD'));
     }
 
