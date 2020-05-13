@@ -67,6 +67,17 @@ let dfs = {
   'df_2020': []
 };
 
+// Hammer Modified. -----------------------------
+let dfcity = {
+  'df_2018': [],
+  'df_2019': [],
+  'df_2020': []
+};
+
+const startDateCity = '01-01';
+const endDateCity = '04-01';
+// Hammer Modified. ==============================
+
 // TODO: connect controller with data
 let [startDate, endDate] = getDates();
 let [t0, t1] = getHourRange();
@@ -77,6 +88,13 @@ let map_mode = getMode();
 
 const main_func = async function() {
   await load_data();
+
+  //Hammer -------------------------------------------
+
+  await load_data_city();
+
+  plot_chart(['Wuhan', 'Beijing', 'Shanghai'], 'NO2', '01-01', '02-01');
+  //Hammer ===============================================
 
   // TODO: add other plotting functions here
   plot_map();
@@ -213,6 +231,169 @@ const plot_map = () => {
   }
   vegaEmbed('#map', geoMapSpec);
 }
+
+const load_data_city = async function() {
+  console.log('load_data_city');
+
+  for (let idx = 0; idx < yearArray.length; idx++) {
+    const year = yearArray[idx];
+    let currDate = moment(`${year}-${startDateCity}`).startOf('day').subtract(1, 'days');
+    let lastDate = moment(`${year}-${endDateCity}`).startOf('day');
+    let dates = [];
+
+    while(currDate.add(1, 'days').diff(lastDate) < 0) {
+      // skip the date 02-29
+      if(currDate.diff('2020-02-29') === 0){
+        continue;
+      }
+      dates.push(currDate.clone().format('YYYYMMDD'));
+    }
+
+    console.log('date generated');
+    //read all the data.
+
+    for (let idx = 0; idx < dates.length; idx++) {
+      await DataFrame.fromCSV(`data/by_city/${year}/${dates[idx]}.csv`).then(data => dfcity[`df_${year}`].push(data));
+    }
+
+    console.log(`${year}` + ' data read');
+
+    //aggregate all the data into three files in years.
+    dfcity[`agg_${year}`] = dfcity[`df_${year}`][0];
+    if (dfcity[`df_${year}`].length > 1) {
+      for (let idx = 1; idx < dfcity[`df_${year}`].length; idx++) {
+
+        // union could be faster yet correct
+        dfcity[`agg_${year}`] = dfcity[`agg_${year}`].union(dfcity[`df_${year}`][idx])
+        
+        
+        // dfcity[`df_${year}`][idx].toArray().forEach(row => {
+        //   dfcity[`agg_${year}`] = dfcity[`agg_${year}`].push(row);
+        // });
+      } 
+    }
+
+    console.log(`${year} ` + 'data aggregated');
+
+    // add year label to the dataframes.
+    dfcity[`agg_${year}`] = dfcity[`agg_${year}`].withColumn('year', () => `${year}`);
+
+    console.log('year added for ' + `${year}`);
+  }
+};
+
+//select data with the given location and pollutant's catagory
+//return one dataframe of all three years 
+selectData = function(loc, pollutant, startDate, endDate) {
+  console.log('selectData is called')
+  let dfSelected = [];
+  for (let i = 0; i < yearArray.length; i++){
+    const year = yearArray[i];
+    let currDate = parseInt(moment(`${year}-${startDate}`).startOf('day').format('YYYYMMDD'), 10);
+    let lastDate = parseInt(moment(`${year}-${endDate}`).startOf('day').format('YYYYMMDD'), 10);
+    
+    //select data according to the requirement and aggregate the hour.
+    
+    let tempDf = dfcity[`agg_${year}`].select('date', 'hour', 'location', 'year', pollutant)
+      .filter(row => row.get('location') === loc).filter(row => {
+        d = parseInt(row.get('date'), 10)
+        return (d >= currDate) & (d <= lastDate);
+      }).withColumn('agg_hour', (row, index) => index).withColumn(`mean ${pollutant}`, () => NaN);
+    
+    console.log('hour aggregated for' + ` ${year}`);
+    // console.log(tempDf.toCollection());
+
+    dfSelected.push(tempDf);
+  }
+
+  console.log(dfSelected[0].count());
+
+  for (let i = 0; i < yearArray.length; i++){
+    days = dfSelected[i].unique('date').toArray();
+    num_days = days.length;
+    middleDate = [days[num_days - 1]];
+    while(num_days > 0){
+      num_days = num_days - period;
+      if(num_days < 0){
+        middleDate.push(days[0]);
+        break;
+      }
+      middleDate.push(days[num_days]);
+    }
+
+    middleDate = middleDate.reverse();
+
+    for(let j = 0; j < middleDate.length - 1; j++){
+
+      let tempDf = dfSelected[i].filter(row => {
+        let date = parseInt(row.get('date'), 10);
+        return (date >= parseInt(middleDate[j], 10) &
+        date < parseInt(middleDate[j + 1], 10));
+      });
+
+      console.log(tempDf.count())
+
+      let mean = tempDf.stat.mean(pollutant);
+
+      console.log('mean calculated ' + `${mean}`);
+
+      dfSelected[i] = dfSelected[i].union(tempDf.withColumn(`mean ${pollutant}`, () => mean));
+
+      console.log('mean set');
+    }
+
+    dfSelected[i] = dfSelected[i].dropMissingValues([`mean ${pollutant}`]);
+
+  }
+  let finalDf = dfSelected[0].union(dfSelected[1]).union(dfSelected[2]);
+  return finalDf;
+};
+
+// pre-define a length of dates for getting the mean.
+const period = 15
+
+// define the names of maps for use
+maps = ['#map1', '#map2', '#map3'];
+
+//Print the required curve.
+//Should work now.
+const plot_chart = (locs, pollutant, startDate, endDate) => {
+  for(let i = 0; i < locs.length; i++){
+    selected_df = selectData(locs[i], pollutant, startDate, endDate);
+    // selected_df_bar = getBarData(period, pollutant, selected_df);
+    readableDf = selected_df.toCollection();
+    const lineChart = {
+      '$schema' : "https://vega.github.io/schema/vega-lite/v4.json",
+      "width": 600, "height": 400,
+      "title": {
+        "text": locs[i],
+        "anchor": "start"
+      },
+      "data": {"values": readableDf},
+      'layer': [
+          {
+        "mark": 'line',
+        "encoding": {
+          'x': {'field': 'agg_hour', 'type': 'quantitative'},
+          'y': {'field': pollutant, 'type': 'quantitative'},
+          'color': {'field': 'year', 'type': 'nominal'},
+        }
+      },
+      {
+        "mark": 'line',
+        "encoding": {
+          'x': {'field': 'agg_hour', 'type': 'quantitative'},
+          'y': {'field': `mean ${pollutant}`, 'type': 'quantitative'},
+          'color': {'field': 'year', 'type': 'nominal'}
+      }
+    }
+
+    ]
+    }
+
+    vegaEmbed(maps[i], lineChart)
+  }
+};
 
 // entry point
 main_func();
