@@ -32,7 +32,7 @@ const getHourRange = () => {
   }
 };
 
-const getDate = () => {
+const getDates = () => {
   //check whether the selected day is valid
   const d0_lim = '2019-12-31';
   const d1_lim = '2020-04-01';
@@ -61,12 +61,9 @@ let dfs = {
 };
 
 // TODO: connect controller with data
-const startDate = '01-01';
-const endDate = '01-04';
-const t0 = 9;
-const t1 = 19;
-
-const obs_type = getPollutant();
+let [startDate, endDate] = getDates();
+let [t0, t1] = getHourRange();
+let obs_type = getPollutant();
 let map_mode = 'absolute';
 map_mode = 'relative';
 
@@ -75,6 +72,22 @@ const main_func = async function() {
   await load_data();
 
   // TODO: add other plotting functions here
+  plot_map();
+};
+
+const update_func = async function() {
+  const [d0, d1] = getDates();
+  [t0, t1] = getHourRange();
+  obs_type = getPollutant();
+
+  if (d0 != startDate || d1 != endDate) {
+    console.log(startDate, endDate);
+    startDate = d0;
+    endDate = d1;
+    console.log(startDate, endDate);
+    await load_data();
+  }
+
   plot_map();
 };
 
@@ -88,8 +101,12 @@ const load_data = async function() {
     let dates = [];
 
     while(currDate.add(1, 'days').diff(lastDate) < 0) {
-      dates.push(currDate.clone().format('YYYYMMDD'));
+      if (!currDate.isSame('2020-02-29')) {
+        dates.push(currDate.clone().format('YYYYMMDD'));
+      }
     }
+    // TODO: remove after debug
+    // console.log(dates);
 
     for (let idx = 0; idx < dates.length; idx++) {
       await DataFrame.fromCSV(`data/by_province/${year}/${dates[idx]}.csv`).then(data => dfs[`df_${year}`].push(data));
