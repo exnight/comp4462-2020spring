@@ -32,6 +32,13 @@ const getHourRange = () => {
   }
 };
 
+//Newly Added: Get either relative or absolute mode
+const getMode = () => {
+  const modeDropdown = document.getElementById("mul-2-4");
+  const index=modeDropdown.selectedIndex;
+  return modeDropdown.options[index].value;
+}
+
 const getDates = () => {
   //check whether the selected day is valid
   const d0_lim = '2019-12-31';
@@ -64,8 +71,8 @@ let dfs = {
 let [startDate, endDate] = getDates();
 let [t0, t1] = getHourRange();
 let obs_type = getPollutant();
-let map_mode = 'absolute';
-map_mode = 'relative';
+let map_mode = getMode();
+//map_mode = 'relative';
 
 
 const main_func = async function() {
@@ -79,6 +86,7 @@ const update_func = async function() {
   const [d0, d1] = getDates();
   [t0, t1] = getHourRange();
   obs_type = getPollutant();
+  map_mode = getMode();
 
   if (d0 != startDate || d1 != endDate) {
     console.log(startDate, endDate);
