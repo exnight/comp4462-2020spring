@@ -75,7 +75,7 @@ obs_type = 'NO2';
 let map_mode = 'absolute';
 map_mode = 'relative';
 
-// Modified. -----------------------------
+// Hammer Modified. -----------------------------
 let dfcity = {
   'df_2018': [],
   'df_2019': [],
@@ -84,7 +84,7 @@ let dfcity = {
 
 const startDateCity = '01-01';
 const endDateCity = '04-01';
-// Modified. ==============================
+// Hammer Modified. ==============================
 
 const main_func = async function() {
   for (let idx = 0; idx < yearArray.length; idx++) {
@@ -111,13 +111,13 @@ const main_func = async function() {
     }
   }
 
+  //Hammer -------------------------------------------
+
   await load_data();
 
-  // sd = selectData('Wuhan', 'NO2');
-  // sbd = getBarData(15, 'NO2', sd);
+  plot_chart(['Wuhan'], 'NO2', '01-01', '01-24');
+  //Hammer ===============================================
 
-
-  plot_chart(['Wuhan', 'Beijing'], 'NO2', '01-01', '02-03');
   // TODO: add other plotting functions here
   plot_map();
 };
@@ -266,10 +266,6 @@ const load_data = async function() {
   }
 };
 
-//call load_data to prepare the data of line_chart
-// load_data();
-
-//BUG HERE selectData will be called before load_data finished
 //select data with the given location and pollutant's catagory
 //return one dataframe of all three years 
 selectData = function(loc, pollutant, startDate, endDate) {
@@ -279,17 +275,59 @@ selectData = function(loc, pollutant, startDate, endDate) {
     const year = yearArray[i];
     let currDate = parseInt(moment(`${year}-${startDate}`).startOf('day').format('YYYYMMDD'), 10);
     let lastDate = parseInt(moment(`${year}-${endDate}`).startOf('day').format('YYYYMMDD'), 10);
+    
     //select data according to the requirement and aggregate the hour.
+    
     let tempDf = dfcity[`agg_${year}`].select('date', 'hour', 'location', 'year', pollutant)
       .filter(row => row.get('location') === loc).filter(row => {
         d = parseInt(row.get('date'), 10)
-        return d >= currDate & d <= lastDate;
-      }).withColumn('agg_hour', (row, index) => index);
+        return (d >= currDate) & (d <= lastDate);
+      }).withColumn('agg_hour', (row, index) => index).withColumn(`mean ${pollutant}`, () => NaN);
     
     console.log('hour aggregated for' + ` ${year}`);
     // console.log(tempDf.toCollection());
 
     dfSelected.push(tempDf);
+  }
+
+  console.log(dfSelected[0].count());
+
+  for (let i = 0; i < yearArray.length; i++){
+    days = dfSelected[i].unique('date').toArray();
+    num_days = days.length;
+    middleDate = [days[num_days - 1]];
+    while(num_days > 0){
+      num_days = num_days - period;
+      if(num_days < 0){
+        middleDate.push(days[0]);
+        break;
+      }
+      middleDate.push(days[num_days]);
+    }
+
+    middleDate = middleDate.reverse();
+
+    for(let j = 0; j < middleDate.length - 1; j++){
+
+      let tempDf = dfSelected[i].filter(row => {
+        let date = parseInt(row.get('date'), 10);
+        return (date >= parseInt(middleDate[j], 10) &
+        date < parseInt(middleDate[j + 1], 10));
+      });
+
+      console.log(tempDf.count())
+
+      let mean = tempDf.stat.mean(pollutant);
+
+      console.log('mean calculated ' + `${mean}`);
+
+      dfSelected[i] = dfSelected[i].union(tempDf.withColumn(`mean ${pollutant}`, () => mean));
+
+      console.log('mean set');
+    }
+
+    dfSelected[i] = dfSelected[i].dropMissingValues([`mean ${pollutant}`]);
+
   }
   let finalDf = dfSelected[0].union(dfSelected[1]).union(dfSelected[2]);
   return finalDf;
@@ -297,57 +335,6 @@ selectData = function(loc, pollutant, startDate, endDate) {
 
 // pre-define a length of dates for getting the mean.
 const period = 15
-
-// sd = selectData('Wuhan', 'NO2');
-
-//NOT TESTED YET
-//generate the data that provides mean of periods of days
-//returns data of three years.
-getBarData = function(period, pollutant, df){
-
-  console.log('getBarData is called')
-
-  let dfBar = df;
-
-  for (let idx = 0; idx < yearArray.length; idx++) {
-    let middleDate = [];
-    const year = yearArray[idx];
-    let currDate = moment(`${year}-${startDateCity}`).startOf('day');
-    let lastDate = moment(`${year}-${endDateCity}`).startOf('day');
-
-    middleDate.push(currDate.clone().format('YYYYMMDD'));
-    while(currDate.add(period, 'days').diff(lastDate) <= 0) {
-      if(currDate.diff('2020-02-29') > 0 & currDate.subtract(period, 'days').diff('2020-02-29') < 0){
-        currDate.add(1, 'days');
-      }
-      console.log(currDate.clone().format('YYYYMMDD'));
-      middleDate.push(currDate.clone().format('YYYYMMDD'));
-    }
-
-    console.log(middleDate);
-
-    for(let j = 0; j < middleDate.length - 1; j++){
-      let mean = df.filter(row => {
-        let date = parseInt(row.get('date'), 10);
-        return (date >= parseInt(middleDate[j], 10) &
-        date < parseInt(middleDate[j + 1], 10));
-      }).stat.mean(pollutant);
-
-      console.log('mean calculated');
-
-      dfBar.union(df.filter(row => {
-        let date = parseInt(row.get('date'), 10);
-        return (date >= parseInt(middleDate[j], 10) &
-        date < parseInt(middleDate[j + 1], 10));
-      }).withColumn(pollutant, () => mean));
-
-      console.log('mean set');
-    }   
-  }
-
-  // let finalDf = dfBar[0].union(dfBar[1]).union(dfBar[2]);
-  return dfBar;
-}
 
 // define the names of maps for use
 maps = ['#map1', '#map2', '#map3'];
@@ -361,14 +348,27 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
     readableDf = selected_df.toCollection();
     const lineChart = {
       '$schema' : "https://vega.github.io/schema/vega-lite/v4.json",
-      "width": 300, "height": 200,
+      "width": 400, "height": 400,
       "data": {"values": readableDf},
-      "mark": 'line',
-      "encoding": {
-        'x': {'field': 'agg_hour', 'type': 'quantitative'},
-        'y': {'field': pollutant, 'type': 'quantitative'},
-        'color': {'field': 'year', 'type': 'nominal'}
+      'layer': [
+          {
+        "mark": 'line',
+        "encoding": {
+          'x': {'field': 'agg_hour', 'type': 'quantitative'},
+          'y': {'field': pollutant, 'type': 'quantitative'},
+          'color': {'field': 'year', 'type': 'nominal'}
+        }
+      },
+      {
+        "mark": 'line',
+        "encoding": {
+          'x': {'field': 'agg_hour', 'type': 'quantitative'},
+          'y': {'field': `mean ${pollutant}`, 'type': 'quantitative'},
+          'color': {'field': 'year', 'type': 'nominal'}
       }
+    }
+
+    ]
     }
 
     vegaEmbed(maps[i], lineChart)
