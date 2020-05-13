@@ -13,46 +13,42 @@ const pickDate = () => {
   });
 };
 
+const getPollutant = () => {
+  const pollutantDropdown = document.getElementById("mul-2-1");
+  const index = pollutantDropdown.selectedIndex ;
+  const selectedPollutant = pollutantDropdown.options[index].value;
 
-function getPollutant()
-{
-  var myselect=document.getElementById("mul-2-1");
-  var index=myselect.selectedIndex ;
-  var myvalue=myselect.options[index].value;
+  return selectedPollutant;
+};
 
-  alert(myvalue);
-  return myvalue
-}
-
-function getHourRange()
-{
-  var myselect=document.getElementById("mul-2-3");
-  var index=myselect.selectedIndex ;
-  if (index==0)
-  {
-    return [0,23]
+const getHourRange = () => {
+  const hourDropdown = document.getElementById("mul-2-3");
+  const index = hourDropdown.selectedIndex ;
+  if (index == 0) {
+    return [0, 23]
   }
-  if (index==1)
-  {
-    return [9,18]
+  if (index == 1) {
+    return [9, 18]
   }
-}
+};
 
-function getDate()
-{
+const getDate = () => {
   //check whether the selected day is valid
-  
-  var starting_day=document.getElementById("start_day").value;
-  var ending_day=document.getElementById("end_day").value;
-  
-    if (starting_day.substr(3)=="01" || starting_day.substr(3)=="02" || starting_day.substr(3)=="03")
-    {
-      if (ending_day.substr(3)=="01" || ending_day.substr(3)=="02" || ending_day.substr(3)=="03")
-      {
-        return [starting_day, ending_day]
-      }
+  const d0_lim = '2019-12-31';
+  const d1_lim = '2020-04-01';
+
+  const d0 = moment('2020-'.concat(document.getElementById("start_day").value));
+  const d1 = moment('2020-'.concat(document.getElementById("end_day").value));
+
+  if (d0.isBetween(d0_lim, d1_lim) && d1.isBetween(d0_lim, d1_lim)) {
+    if (d1 > d0) {
+      return [d0.format('MM-DD'), d1.format('MM-DD')];
+    } else {
+      alert('Ending date needs to be later than starting date');
     }
-  alert("Please select two days between 1st Jan to 31st Mar and submit again")
+  } else {
+    alert('Please select two date from 1st Jan to 31st Mar and submit again');
+  }
 }
 
 const DataFrame = dfjs.DataFrame;
@@ -69,7 +65,7 @@ const startDate = '01-01';
 const endDate = '01-04';
 const t0 = 9;
 const t1 = 19;
-// TODO: . in column name
+
 const obs_type = getPollutant();
 let map_mode = 'absolute';
 map_mode = 'relative';
