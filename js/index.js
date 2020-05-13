@@ -72,8 +72,17 @@ map_mode = 'relative';
 
 
 const main_func = async function() {
+  await load_data();
+
+  // TODO: add other plotting functions here
+  plot_map();
+};
+
+const load_data = async function() {
   for (let idx = 0; idx < yearArray.length; idx++) {
     const year = yearArray[idx];
+    dfs[`df_${year}`] = [];
+
     let currDate = moment(`${year}-${startDate}`).startOf('day').subtract(1, 'days');
     let lastDate = moment(`${year}-${endDate}`).startOf('day');
     let dates = [];
@@ -95,9 +104,6 @@ const main_func = async function() {
       }
     }
   }
-
-  // TODO: add other plotting functions here
-  plot_map();
 };
 
 const plot_map = () => {
