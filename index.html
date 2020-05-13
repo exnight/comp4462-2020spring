@@ -41,8 +41,8 @@
       <div class="col-2">
         <br>
         <div class="text-info" title="Absolute Mode: Average Concentration of pollutant in selected period of time in 2020. Relative Mode: Difference of average concentration of pollutant in selected period, given by C(2020)-1/2*(C(2018)+C(2019))">Please select Absolute Mode or Relative model</div><br>
-        <div class="dropdown-mul-1">
-          <select style="display:none"  name="" id="mul-2-4" multiple placeholder="Select">
+        <div class="dropdown-sin-1">
+          <select style="display:none"  name="" id="mul-2-4" placeholder="Select">
             <option name="mode" value="absolute" selected>Absolute Mode</option>
             <option name="mode" value="relative">Relative Mode</option>
           </select>
@@ -54,8 +54,8 @@
 
       <div class="col-2">
         <div class="text-info">Please Select 1 Pollutant</div><br>
-        <div class="dropdown-mul-1">
-          <select style="display:none"  name="" id="mul-2-1" multiple placeholder="Select">
+        <div class="dropdown-sin-1">
+          <select style="display:none"  name="" id="mul-2-1" placeholder="Select">
             <option name="pollutant" value="SO2" selected>SO2</option>
             <option name="pollutant" value="NO2">NO2</option>
             <option name="pollutant" value="PM2_5">PM2_5</option>
@@ -100,8 +100,8 @@
       </div>
       <div class="col-2">
         <div class="text-info">Please Select Hour Range</div><br>
-        <div class="dropdown-mul-1">
-          <select style="display:none"  name="" id="mul-2-3" multiple placeholder="Select">
+        <div class="dropdown-sin-1">
+          <select style="display:none"  name="" id="mul-2-3" placeholder="Select">
             <option name="timerange" value="All Day" selected>All Day</option>
             <option name="timerange" value="9am-6pm">9am-6pm</option>
           </select>
@@ -173,11 +173,11 @@
       limitCount: 3,
       searchable: true,
       multipleMode: 'label',
+      limitCountErrorMessage:'Please select no more than 3',
     });
-    $('.dropdown-mul-1').dropdown({
-      limitCount: 1,
-      searchable: true,
-      multipleMode: 'label',
+    $('.dropdown-sin-1').dropdown({
+      readOnly: true,
+      input: '<input type="text" maxLength="20" placeholder="Search">'
     });
   </script>
 
