@@ -226,8 +226,6 @@ const load_data = async function() {
     console.log('date generated');
     //read all the data.
 
-
-    // TODO: 2020 still not solved, 02-29 not found. need to skip this date.
     for (let idx = 0; idx < dates.length; idx++) {
       await DataFrame.fromCSV(`data/by_city/${year}/${dates[idx]}.csv`).then(data => dfcity[`df_${year}`].push(data));
     }
@@ -261,18 +259,16 @@ const load_data = async function() {
 //call load_data to prepare the data of line_chart
 load_data();
 
-//name the pollutant ahead
-let pollutant = 'NO2';
-
-//BUG HERE
+//BUG HERE selectData will be called before load_data finished
 //select data with the given location and pollutant's catagory
 //return one dataframe of all three years 
-selectData = async function(loc, pollutant) {
+selectData = function(loc, pollutant) {
+  console.log('selectData is called')
   let dfSelected = [];
   for (let i = 0; i < yearArray.length; i++){
     const year = yearArray[i];
     //select data according to the requirement and aggregate the hour.
-    tempDf = dfcity[`agg_${year}`].select('date', 'hour', 'location', 'year', pollutant)
+    let tempDf = dfcity[`agg_${year}`].select('date', 'hour', 'location', 'year', pollutant)
       .filter(row => row.get('location') === loc).withColumn('agg_hour', (row, index) => index);
     
     console.log('hour aggregated for' + ` ${year}`);
@@ -299,9 +295,10 @@ getBarData = async function(period, pollutant, df){
   for (let idx = 0; idx < yearArray.length; idx++) {
     let middleDate = [];
     const year = yearArray[idx];
-    let currDate = moment(`${year}-${startDateCity}`).startOf('day').subtract(1, 'days');
+    let currDate = moment(`${year}-${startDateCity}`).startOf('day');
     let lastDate = moment(`${year}-${endDateCity}`).startOf('day');
 
+    middleDate.push(currDate.clone().format('YYYYMMDD'));
     while(currDate.add(period, 'days').diff(lastDate) <= 0) {
       if(currDate.diff('2020-02-29') > 0 & currDate.subtract(period, 'days').diff('2020-02-29') < 0){
         currDate.add(1, 'days');
@@ -309,17 +306,17 @@ getBarData = async function(period, pollutant, df){
       middleDate.push(currDate.clone().format('YYYYMMDD'));
     }
 
-    for(let j = 0; j < middleDate.length; j++){
+    for(let j = 0; j < middleDate.length - 1; j++){
       let mean = dfBar[idx].filter(row => {
         let date = parseInt(row.get('date'), 10);
-        return (date >= parseInt(middleDate[j].subtract(period, 'days'), 10) &
-        date < parseInt(middleDate[j], 10));
+        return (date >= parseInt(middleDate[j], 10) &
+        date < parseInt(middleDate[j + 1], 10));
       }).stat.mean(pollutant);
 
       dfBar[idx] = dfBar[idx].filter(row => {
         let date = parseInt(row.get('date'), 10);
-        return (date >= parseInt(middleDate[j].subtract(period, 'days'), 10) &
-        date < parseInt(middleDate[j], 10));
+        return (date >= parseInt(middleDate[j], 10) &
+        date < parseInt(middleDate[j + 1], 10));
       }).map(row => row.set(pollutant, mean))
     }   
   }
