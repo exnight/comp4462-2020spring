@@ -21,6 +21,10 @@ const getPollutant = () => {
   return selectedPollutant;
 };
 
+const getCity = () => {
+  return $('#mul-2-2').val();
+};
+
 const getHourRange = () => {
   const hourDropdown = document.getElementById("mul-2-3");
   const index = hourDropdown.selectedIndex ;
@@ -83,6 +87,7 @@ let [startDate, endDate] = getDates();
 let [t0, t1] = getHourRange();
 let obs_type = getPollutant();
 let map_mode = getMode();
+let locs = getCity();
 //map_mode = 'relative';
 
 
@@ -93,7 +98,7 @@ const main_func = async function() {
 
   await load_data_city();
 
-  plot_chart(['Wuhan', 'Beijing', 'Shanghai'], 'NO2', '01-01', '02-01');
+  plot_chart(locs, obs_type, startDate, endDate);
   //Hammer ===============================================
 
   // TODO: add other plotting functions here
@@ -105,6 +110,7 @@ const update_func = async function() {
   [t0, t1] = getHourRange();
   obs_type = getPollutant();
   map_mode = getMode();
+  locs = getCity();
 
   if (d0 != startDate || d1 != endDate) {
     console.log(startDate, endDate);
@@ -112,6 +118,12 @@ const update_func = async function() {
     endDate = d1;
     console.log(startDate, endDate);
     await load_data();
+  }
+
+  if (d0 != startDate || d1 != endDate) {
+    startDate = d0;
+    endDate = d1;
+    plot_chart(locs, obs_type, startDate, endDate);
   }
 
   plot_map();
