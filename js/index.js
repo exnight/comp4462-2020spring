@@ -117,7 +117,7 @@ const main_func = async function() {
   // sbd = getBarData(15, 'NO2', sd);
 
 
-  plot_chart(['Wuhan', 'Beijing'], 'NO2');
+  plot_chart(['Wuhan', 'Beijing'], 'NO2', '01-01', '02-03');
   // TODO: add other plotting functions here
   plot_map();
 };
@@ -272,14 +272,19 @@ const load_data = async function() {
 //BUG HERE selectData will be called before load_data finished
 //select data with the given location and pollutant's catagory
 //return one dataframe of all three years 
-selectData = function(loc, pollutant) {
+selectData = function(loc, pollutant, startDate, endDate) {
   console.log('selectData is called')
   let dfSelected = [];
   for (let i = 0; i < yearArray.length; i++){
     const year = yearArray[i];
+    let currDate = parseInt(moment(`${year}-${startDate}`).startOf('day').format('YYYYMMDD'), 10);
+    let lastDate = parseInt(moment(`${year}-${endDate}`).startOf('day').format('YYYYMMDD'), 10);
     //select data according to the requirement and aggregate the hour.
     let tempDf = dfcity[`agg_${year}`].select('date', 'hour', 'location', 'year', pollutant)
-      .filter(row => row.get('location') === loc).withColumn('agg_hour', (row, index) => index);
+      .filter(row => row.get('location') === loc).filter(row => {
+        d = parseInt(row.get('date'), 10)
+        return d >= currDate & d <= lastDate;
+      }).withColumn('agg_hour', (row, index) => index);
     
     console.log('hour aggregated for' + ` ${year}`);
     // console.log(tempDf.toCollection());
@@ -349,9 +354,9 @@ maps = ['#map1', '#map2', '#map3'];
 
 //Print the required curve.
 //Should work now.
-const plot_chart = (locs, pollutant) => {
+const plot_chart = (locs, pollutant, startDate, endDate) => {
   for(let i = 0; i < locs.length; i++){
-    selected_df = selectData(locs[i], pollutant);
+    selected_df = selectData(locs[i], pollutant, startDate, endDate);
     // selected_df_bar = getBarData(period, pollutant, selected_df);
     readableDf = selected_df.toCollection();
     const lineChart = {
