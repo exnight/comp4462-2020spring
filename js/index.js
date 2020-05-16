@@ -73,9 +73,9 @@ let dfs = {
 
 // Hammer Modified. -----------------------------
 let dfcity = {
-  'df_2018': [],
-  'df_2019': [],
-  'df_2020': []
+  'agg_2018': [],
+  'agg_2019': [],
+  'agg_2020': []
 };
 
 const startDateCity = '01-01';
@@ -242,52 +242,16 @@ const plot_map = () => {
 
 const load_data_city = async function() {
   console.log('load_data_city');
-
-  for (let idx = 0; idx < yearArray.length; idx++) {
-    const year = yearArray[idx];
-    let currDate = moment(`${year}-${startDateCity}`).startOf('day').subtract(1, 'days');
-    let lastDate = moment(`${year}-${endDateCity}`).startOf('day');
-    let dates = [];
-
-    while(currDate.add(1, 'days').diff(lastDate) < 0) {
-      // skip the date 02-29
-      if(currDate.diff('2020-02-29') === 0){
-        continue;
-      }
-      dates.push(currDate.clone().format('YYYYMMDD'));
-    }
-
-    console.log('date generated');
-    //read all the data.
-
-    for (let idx = 0; idx < dates.length; idx++) {
-      await DataFrame.fromCSV(`data/by_city/${year}/${dates[idx]}.csv`).then(data => dfcity[`df_${year}`].push(data));
-    }
-
-    console.log(`${year}` + ' data read');
-
-    //aggregate all the data into three files in years.
-    dfcity[`agg_${year}`] = dfcity[`df_${year}`][0];
-    if (dfcity[`df_${year}`].length > 1) {
-      for (let idx = 1; idx < dfcity[`df_${year}`].length; idx++) {
-
-        // union could be faster yet correct
-        dfcity[`agg_${year}`] = dfcity[`agg_${year}`].union(dfcity[`df_${year}`][idx])
-        
-        
-        // dfcity[`df_${year}`][idx].toArray().forEach(row => {
-        //   dfcity[`agg_${year}`] = dfcity[`agg_${year}`].push(row);
-        // });
-      } 
-    }
-
-    console.log(`${year} ` + 'data aggregated');
-
     // add year label to the dataframes.
-    dfcity[`agg_${year}`] = dfcity[`agg_${year}`].withColumn('year', () => `${year}`);
+    for (let idx = 0; idx < yearArray.length; idx++) {
+      const year = yearArray[idx];
+      console.log(`${year} read`)
+      await DataFrame.fromCSV(`data/by_main_city/${year}_main_cities.csv`).then(data => dfcity[`agg_${year}`].push(data));
+    
+      dfcity[`agg_${year}`] = dfcity[`agg_${year}`][0].withColumn('year', () => `${year}`);
 
-    console.log('year added for ' + `${year}`);
-  }
+      console.log('year added for ' + `${year}`);
+    }
 };
 
 //select data with the given location and pollutant's catagory
@@ -306,7 +270,8 @@ selectData = (loc, pollutant, startDate, endDate) => {
       .filter(row => row.get('location') === loc).filter(row => {
         d = parseInt(row.get('date'), 10)
         return (d >= currDate) & (d <= lastDate);
-      }).withColumn('agg_hour', (row, index) => index).withColumn(`mean ${pollutant}`, () => NaN);
+      }).withColumn('agg_hour', (row, index) => index)
+      // .withColumn(`mean ${pollutant}`, () => NaN);
     
     console.log('hour aggregated for' + ` ${year}`);
     // console.log(tempDf.toCollection());
@@ -317,40 +282,13 @@ selectData = (loc, pollutant, startDate, endDate) => {
   console.log(dfSelected[0].count());
 
   for (let i = 0; i < yearArray.length; i++){
-    days = dfSelected[i].unique('date').toArray();
-    num_days = days.length;
-    middleDate = [days[num_days - 1]];
-    while(num_days > 0){
-      num_days = num_days - period;
-      if(num_days < 0){
-        middleDate.push(days[0]);
-        break;
-      }
-      middleDate.push(days[num_days]);
+    moveMean = movingMean(dfSelected[i].select(pollutant), pollutant);
+    length = dfSelected[i].dim()[0];
+    for(var j = 0; j < length; j++){
+      dfSelected[i] = dfSelected[i].setRow(j, row => row.set(`mean ${pollutant}`, moveMean[j]));
     }
-
-    middleDate = middleDate.reverse();
-
-    for(let j = 0; j < middleDate.length - 1; j++){
-
-      let tempDf = dfSelected[i].filter(row => {
-        let date = parseInt(row.get('date'), 10);
-        return (date >= parseInt(middleDate[j], 10) &
-        date < parseInt(middleDate[j + 1], 10));
-      });
-
-      console.log(tempDf.count())
-
-      let mean = tempDf.stat.mean(pollutant);
-
-      console.log('mean calculated ' + `${mean}`);
-
-      dfSelected[i] = dfSelected[i].union(tempDf.withColumn(`mean ${pollutant}`, () => mean));
-
-      console.log('mean set');
-    }
-
-    dfSelected[i] = dfSelected[i].dropMissingValues([`mean ${pollutant}`]);
+    // dfSelected[i] = dfSelected[i].map();
+    // console.log(dfSelected[i].toCollection())
 
   }
   let finalDf = dfSelected[0].union(dfSelected[1]).union(dfSelected[2]);
@@ -405,3 +343,27 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
 
 // entry point
 main_func();
+
+const movingMean = (ipt, pollutant) => {
+  iptArr = ipt.cast(pollutant, Number).toArray();
+  // console.log(iptArr);
+  const period = 21;
+  let moveMean = [];
+  for(var i = 0; i < (period - 1) /2; i ++ ){
+    moveMean.push(NaN);
+  }
+  for (var i = (period - 1) /2 ; i < iptArr.length - (period - 1) /2; i++){
+    var sum = 0;
+    for (var j = 0; j < period; j++){
+      sum = sum + iptArr[i - (period - 1)/2 + j][0];
+    }
+    moveMean.push(sum / period);
+  }
+  for(var i = 0; i < (period - 1) /2; i ++ ){
+    moveMean.push(NaN);
+  }
+
+  // console.log(moveMean);
+  // const dfMean = new DataFrame(moveMean, [`${pollutant}_mean`]);
+  return moveMean;
+}
