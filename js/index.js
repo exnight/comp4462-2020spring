@@ -335,7 +335,7 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
     readableDf = selected_df.toCollection();
     const lineChart = {
       $schema: "https://vega.github.io/schema/vega-lite/v4.json",
-      width: 300,
+      width: 400,
       height: 200,
       title: {
         text: locs[i],
