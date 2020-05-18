@@ -242,8 +242,13 @@ const plot_map = () => {
         scale: { scheme: "yellowgreenblue" },
       },
       tooltip: [
-        { field: "properties.NAME_1", type: "nominal", title: "Name" },
-        { field: "properties.NL_NAME_1", type: "nominal", title: "CH Name" },
+        { field: "properties.NAME_1", type: "nominal", title: "Province" },
+        {
+          field: "properties.NL_NAME_1",
+          type: "nominal",
+          title: "Province (Zh)",
+        },
+        { field: obs_type, type: "quantitative", title: "Value" },
       ],
     },
   };
@@ -294,8 +299,16 @@ selectData = (loc, pollutant, startDate, endDate) => {
         d = parseInt(row.get("date"), 10);
         return (d >= currDate) & (d <= lastDate);
       })
-      .withColumn("date_hour", (row) => {return moment(moment(row.get('date')).format('YYYY-MM-DD')).format('DD MMM YYYY')
-       + ' ' + row.get('hour') + ':00:00'});      
+      .withColumn("date_hour", (row) => {
+        return (
+          moment(moment(row.get("date")).format("YYYY-MM-DD")).format(
+            "DD MMM YYYY"
+          ) +
+          " " +
+          row.get("hour") +
+          ":00:00"
+        );
+      });
 
     console.log("hour aggregated for" + ` ${year}`);
 
@@ -343,12 +356,16 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
       data: { values: readableDf },
       layer: [
         {
-          mark:{
+          mark: {
             type: "line",
-            opacity: 0.5     
-        },
+            opacity: 0.5,
+          },
           encoding: {
-            x: { field: "date_hour", type: "temporal", timeUnit: 'monthdatehours'},
+            x: {
+              field: "date_hour",
+              type: "temporal",
+              timeUnit: "monthdatehours",
+            },
             y: { field: pollutant, type: "quantitative" },
             color: { field: "year", type: "nominal" },
           },
@@ -356,7 +373,11 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
         {
           mark: "line",
           encoding: {
-            x: { field: "date_hour", type: "temporal", timeUnit: 'monthdatehours'},
+            x: {
+              field: "date_hour",
+              type: "temporal",
+              timeUnit: "monthdatehours",
+            },
             y: { field: `mean ${pollutant}`, type: "quantitative" },
             color: { field: "year", type: "nominal" },
           },
