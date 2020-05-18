@@ -294,11 +294,10 @@ selectData = (loc, pollutant, startDate, endDate) => {
         d = parseInt(row.get("date"), 10);
         return (d >= currDate) & (d <= lastDate);
       })
-      .withColumn("agg_hour", (row, index) => index);
-    // .withColumn(`mean ${pollutant}`, () => NaN);
+      .withColumn("date_hour", (row) => {return moment(moment(row.get('date')).format('YYYY-MM-DD')).format('DD MMM YYYY')
+       + ' ' + row.get('hour') + ':00:00'});      
 
     console.log("hour aggregated for" + ` ${year}`);
-    // console.log(tempDf.toCollection());
 
     dfSelected.push(tempDf);
   }
@@ -344,9 +343,12 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
       data: { values: readableDf },
       layer: [
         {
-          mark: "line",
+          mark:{
+            type: "line",
+            opacity: 0.5     
+        },
           encoding: {
-            x: { field: "agg_hour", type: "quantitative" },
+            x: { field: "date_hour", type: "temporal", timeUnit: 'monthdatehours'},
             y: { field: pollutant, type: "quantitative" },
             color: { field: "year", type: "nominal" },
           },
@@ -354,7 +356,7 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
         {
           mark: "line",
           encoding: {
-            x: { field: "agg_hour", type: "quantitative" },
+            x: { field: "date_hour", type: "temporal", timeUnit: 'monthdatehours'},
             y: { field: `mean ${pollutant}`, type: "quantitative" },
             color: { field: "year", type: "nominal" },
           },
