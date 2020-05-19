@@ -102,6 +102,7 @@ const main_func = async function () {
   plot_chart(locs, obs_type, startDate, endDate);
   //Newly added
   plot_candle(locs, obs_type, startDate, endDate);
+  plot_stream(locs, obs_type, startDate, endDate);
 };
 
 const update_func = async function () {
@@ -125,6 +126,7 @@ const update_func = async function () {
 
   //Newly added
   plot_candle(locs, obs_type, startDate, endDate);
+  plot_stream(locs, obs_type, startDate, endDate);
 };
 
 const load_data = async function () {
@@ -523,3 +525,67 @@ const plot_candle = (locs, pollutant, startDate, endDate) => {
   vegaEmbed(candle, candlestick);
   
 };
+
+selectStreamData = (locs, pollutant, startDate, endDate) => {
+  console.log("selecStreamData is called");
+
+  //Get an array of date
+  
+    const year = 2020;
+    let currDate = parseInt(
+      moment(`${year}-${startDate}`).startOf("day").format("YYYYMMDD"),
+      10
+    );
+    let lastDate = parseInt(
+      moment(`${year}-${endDate}`).startOf("day").format("YYYYMMDD"),
+      10
+    );
+
+
+    let tempDf = candle_stick[0]
+      
+      .filter((row) => row.get("pollutant") === pollutant)
+      .filter((row) => {
+        d = parseInt(row.get("date"), 10);
+        return (d >= currDate) & (d <= lastDate);
+      })
+
+    return tempDf;
+  
+  
+  // .withColumn("agg_hour", (row, index) => index);
+  // .withColumn(`mean ${pollutant}`, () => NaN);
+
+  //console.log("hour aggregated for" + ` ${year}`);
+  // console.log(tempDf.toCollection());
+
+};
+
+
+const plot_stream = (locs, pollutant, startDate, endDate) => {
+
+  selected_df = selectStreamData(locs, pollutant, startDate, endDate);
+  // selected_df_bar = getBarData(period, pollutant, selected_df);
+  readableDf = selected_df.toCollection();
+  const streamgraph =
+  {
+    $schema: "https://vega.github.io/schema/vega-lite/v4.json",
+    title:"StreamGraph for "+startDate+" to "+endDate,
+    width: 600, height: 300,
+    data: { values: readableDf },
+    mark: "area",
+    encoding: {
+      x: {
+        timeUnit: "yearmonthdate", field: "newdate", type: "temporal",
+        axis: { domain: false, format: "%Y/%m/%d", tickSize: 0 }
+      },
+      y: {
+        aggregate: "sum", field: "end", type: "quantitative",
+        axis: null,
+        stack: "center"
+      },
+      color: { field: "city", type: "nominal", scale: { "scheme": "category20b" } }
+    }
+  }
+  vegaEmbed(stream, streamgraph);
+}
