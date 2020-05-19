@@ -476,7 +476,7 @@ const plot_candle = (locs, pollutant, startDate, endDate) => {
   const candlestick = {
     $schema: "https://vega.github.io/schema/vega-lite/v4.json",
     width: 400,
-    title:locs[0]+' In 2020',
+    title:locs[0]+" "+pollutant+" "+startDate+" to "+endDate,
     description: "A candlestick chart inspired by an example in Protovis (http://mbostock.github.io/protovis/ex/candlestick.html)",
     data: {values: readableDf},
     encoding: {
