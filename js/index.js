@@ -80,6 +80,8 @@ let dfcity = {
   agg_2020: [],
 };
 
+let candle_stick=[];
+
 const startDateCity = "01-01";
 const endDateCity = "04-01";
 // Hammer Modified. ==============================
@@ -93,10 +95,13 @@ let locs = getCity();
 const main_func = async function () {
   await load_data();
   await load_data_city();
+  await load_candle_stick();
 
   // TODO: add other plotting functions here
   plot_map();
   plot_chart(locs, obs_type, startDate, endDate);
+  //Newly added
+  plot_candle(locs, obs_type, startDate, endDate);
 };
 
 const update_func = async function () {
@@ -117,6 +122,9 @@ const update_func = async function () {
   plot_chart(locs, obs_type, startDate, endDate);
 
   plot_map();
+
+  //Newly added
+  plot_candle(locs, obs_type, startDate, endDate);
 };
 
 const load_data = async function () {
@@ -412,4 +420,106 @@ const movingMean = (ipt, pollutant) => {
   }
 
   return moveMean;
+};
+
+const load_candle_stick = async function () {
+  console.log("load_candle_stick");
+  // add year label to the dataframes.
+ 
+    //console.log(`${year} read`);
+    await DataFrame.fromCSV(
+      `data/by_main_city/candlestick2020.csv`
+    ).then((data) => candle_stick.push(data));
+
+
+    //console.log("year added for " + `${year}`);
+  
+};
+
+
+selectCandleData = (loc, pollutant, startDate, endDate) => {
+  console.log("selecCandleData is called");
+  
+  //Get an array of date
+
+  const year = 2020;
+  let currDate = parseInt(
+    moment(`${year}-${startDate}`).startOf("day").format("YYYYMMDD"),
+    10
+  );
+  let lastDate = parseInt(
+    moment(`${year}-${endDate}`).startOf("day").format("YYYYMMDD"),
+    10
+  );
+    
+
+    let tempDf = candle_stick[0]
+      .filter((row) => row.get("city") === loc)
+      .filter((row) => row.get("pollutant") === pollutant)
+      .filter((row) => {
+        d = parseInt(row.get("date"), 10);
+        return (d >= currDate) & (d <= lastDate);
+      })
+    // .withColumn("agg_hour", (row, index) => index);
+    // .withColumn(`mean ${pollutant}`, () => NaN);
+
+    //console.log("hour aggregated for" + ` ${year}`);
+    // console.log(tempDf.toCollection());
+  return tempDf;
+};
+
+const plot_candle = (locs, pollutant, startDate, endDate) => {
+  
+  selected_df = selectCandleData(locs[0], pollutant, startDate, endDate);
+  // selected_df_bar = getBarData(period, pollutant, selected_df);
+  readableDf = selected_df.toCollection();
+  const candlestick = {
+    $schema: "https://vega.github.io/schema/vega-lite/v4.json",
+    width: 400,
+    title:locs[0]+' In 2020',
+    description: "A candlestick chart inspired by an example in Protovis (http://mbostock.github.io/protovis/ex/candlestick.html)",
+    data: {values: readableDf},
+    encoding: {
+      x: {
+        field: "newdate", 
+        type: "temporal", 
+        title: "Date in 2020",
+        axis: {
+              format: "%Y/%m/%d",
+              labelAngle: -45,
+              title: "Date in 2020"
+            }
+        },
+      color: {
+        condition: {
+          test: "datum.start < datum.end",
+          value: "#06982d"
+        },
+        value: "#ae1325"
+      }
+    },
+    layer: [
+      {
+        mark: "rule",
+        encoding: {
+          y: {
+            field: "low", "type": "quantitative",
+            scale: {"zero": false},
+            title: "Concentration"
+  
+          },
+          "y2": {field: "high"}
+        }
+      },
+      {
+        mark: "bar",
+        encoding: {
+          y: {"field": "start", "type": "quantitative"},
+          y2: {"field": "end"}
+        }
+      }
+    ]
+  }
+  vegaEmbed(candle, candlestick);
+  
 };
