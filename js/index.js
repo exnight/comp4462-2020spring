@@ -111,6 +111,8 @@ const update_func = async function () {
   obs_type = getPollutant();
   map_mode = getMode();
   locs = getCity();
+  
+console.log(locs);
 
   if (d0 != startDate || d1 != endDate) {
     console.log(startDate, endDate);
@@ -396,6 +398,32 @@ const plot_chart = (locs, pollutant, startDate, endDate) => {
     };
 
     vegaEmbed(maps[i], lineChart);
+  }
+
+  for (let i = locs.length; i < 3; i ++){
+    const emptyChart = {
+      $schema: "https://vega.github.io/schema/vega-lite/v4.json",
+      width: 400,
+      height: 200,
+      title: {
+        text: 'City Not Selected',
+        anchor: "start",
+      },
+      "data": {
+        "values": [
+          {"a": "C", "b": 2}, {"a": "C", "b": 7}, {"a": "C", "b": 4},
+          {"a": "D", "b": 1}, {"a": "D", "b": 2}, {"a": "D", "b": 6},
+          {"a": "E", "b": 8}, {"a": "E", "b": 4}, {"a": "E", "b": 7}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "a", "type": "nominal"},
+        "y": {"aggregate": "average", "field": "b", "type": "quantitative"}
+      }
+    }
+
+    vegaEmbed(maps[i], emptyChart);
   }
 };
 
